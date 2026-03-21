@@ -1,0 +1,15 @@
+{
+  "name": "cloudflare-workers",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "forwardPorts": [8787],
+  "postCreateCommand": "npm install -g wrangler && npm install",
+  "runArgs": ["--env-file", "${localWorkspaceFolder}/.env"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

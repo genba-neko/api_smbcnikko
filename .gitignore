@@ -1,0 +1,8 @@
+.env
+.env.local
+.env*.local
+.wrangler/
+node_modules/
+wrangler.jsonc
+package.json
+package-lock.json
