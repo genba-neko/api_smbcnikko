@@ -3,7 +3,7 @@
   "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
   "forwardPorts": [8787],
   "postCreateCommand": "npm install -g wrangler && npm install",
-  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "postStartCommand": "git config --global --unset-all safe.directory; git config --global --add safe.directory ${containerWorkspaceFolder}",
   "runArgs": ["--env-file", "${localWorkspaceFolder}/.env"],
   "customizations": {
     "vscode": {

@@ -28,9 +28,9 @@ CREATE TABLE IF NOT EXISTS yuutai (
 
 -- 検索高速化用インデックス
 -- 銘柄コード + 株数での検索用
-CREATE INDEX IF NOT EXISTS idx_yuutai_ticker_shares 
+CREATE INDEX IF NOT EXISTS idx_yuutai_ticker_shares
   ON yuutai(ticker_code, shares_condition_num);
 
 -- 権利確定月での検索用
-CREATE INDEX IF NOT EXISTS idx_yuutai_record_date 
+CREATE INDEX IF NOT EXISTS idx_yuutai_record_date
   ON yuutai(record_date);
