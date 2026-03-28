@@ -72,12 +72,29 @@ npm run test
 
 ## Schema Operations
 
-新しいテーブルや変更は `schemas/` に追加してください。
+テーブルの作成・削除・再作成は `tools/d1_schema.sh` で行います。
 
 ```bash
-npx wrangler d1 execute smbcnikko-db --remote --file=./schemas/webauthn-sign-count.sql
-npx wrangler d1 execute smbcnikko-db --remote --file=./schemas/yuutai.sql
+# テーブル作成
+bash ./tools/d1_schema.sh create webauthn-sign-count
+bash ./tools/d1_schema.sh create yuutai
+
+# テーブル削除
+bash ./tools/d1_schema.sh drop webauthn-sign-count
+
+# 再作成（drop → create）
+bash ./tools/d1_schema.sh recreate yuutai
+
+# 全テーブル一括（--all を明示）
+bash ./tools/d1_schema.sh recreate --all
+
+# dry-run（SQL を表示するのみ、実行しない）
+bash ./tools/d1_schema.sh recreate --all --dry-run
 ```
+
+`TARGET=local` でローカル D1 に向けることもできます（デフォルトは `remote`）。
+
+新しいテーブルを追加するときは `schemas/<name>.sql` と `schemas/<name>_drop.sql` を対で作成してください。
 
 ## Related Docs
 
@@ -85,10 +102,10 @@ npx wrangler d1 execute smbcnikko-db --remote --file=./schemas/yuutai.sql
 - `docs/api/yuutai.md`
 - `tools/setup/cloudflare/setup_d1_worker.md`
 
-## WebAuthn Table Script
+## WebAuthn Import Script
+
+`webauthn_sign_count` テーブルへのデータ投入は専用スクリプトを使います。
 
 ```bash
-bash ./tools/webauthn_sign_count.sh create
-bash ./tools/webauthn_sign_count.sh drop
 bash ./tools/webauthn_sign_count.sh import
 ```
