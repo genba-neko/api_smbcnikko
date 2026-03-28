@@ -102,10 +102,3 @@ bash ./tools/d1_schema.sh recreate --all --dry-run
 - `docs/api/yuutai.md`
 - `tools/setup/cloudflare/setup_d1_worker.md`
 
-## WebAuthn Import Script
-
-`webauthn_sign_count` テーブルへのデータ投入は専用スクリプトを使います。
-
-```bash
-bash ./tools/webauthn_sign_count.sh import
-```
