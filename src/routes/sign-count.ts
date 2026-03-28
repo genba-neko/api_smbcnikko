@@ -16,16 +16,14 @@ signCount.get('/:credentialId', async (c) => {
 // PUT /sign-count/:credentialId
 signCount.put('/:credentialId', async (c) => {
   const { credentialId } = c.req.param();
-  const { sign_count, user_id } = await c.req.json<{
+  const { sign_count } = await c.req.json<{
     sign_count: number;
-    user_id: string;
   }>();
 
   const result = await signCountService.updateSignCount(
     c.env.DB,
     credentialId,
-    sign_count,
-    user_id
+    sign_count
   );
 
   if ('error' in result) {

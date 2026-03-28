@@ -7,8 +7,7 @@ export const getSignCountByCredential = async (db: D1Database, credentialId: str
 export const updateSignCount = async (
   db: D1Database,
   credentialId: string,
-  newSignCount: number,
-  userId: string = ''
+  newSignCount: number
 ) => {
   if (typeof newSignCount !== 'number' || newSignCount < 0) {
     return { error: 'invalid_sign_count', status: 400 };
@@ -20,7 +19,7 @@ export const updateSignCount = async (
     return { error: 'sign_count_not_greater', current: existing.sign_count, status: 409 };
   }
 
-  await upsertSignCount(db, credentialId, newSignCount, userId);
+  await upsertSignCount(db, credentialId, newSignCount);
   return { ok: true, sign_count: newSignCount };
 };
 
