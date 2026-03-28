@@ -20,14 +20,14 @@ describe('signCountService', () => {
     vi.mocked(repository.getSignCount).mockResolvedValue({
       credential_id: 'cred1',
       sign_count: 10,
-      user_id: 'user1',
+      created_at: 1000000,
       updated_at: 12345,
     });
 
-    const result = await updateSignCount(mockDb, 'cred1', 11, 'user1');
+    const result = await updateSignCount(mockDb, 'cred1', 11);
 
     expect(result).toEqual({ ok: true, sign_count: 11 });
-    expect(repository.upsertSignCount).toHaveBeenCalledWith(mockDb, 'cred1', 11, 'user1');
+    expect(repository.upsertSignCount).toHaveBeenCalledWith(mockDb, 'cred1', 11);
   });
 
   it('新しい sign_count が既存のもの以下の場合は 409 エラーを返す', async () => {
@@ -35,11 +35,11 @@ describe('signCountService', () => {
     vi.mocked(repository.getSignCount).mockResolvedValue({
       credential_id: 'cred1',
       sign_count: 10,
-      user_id: 'user1',
+      created_at: 1000000,
       updated_at: 12345,
     });
 
-    const result = await updateSignCount(mockDb, 'cred1', 10, 'user1');
+    const result = await updateSignCount(mockDb, 'cred1', 10);
 
     expect(result).toEqual({
       error: 'sign_count_not_greater',
@@ -50,14 +50,14 @@ describe('signCountService', () => {
   });
 
   it('負の sign_count は 400 エラーを返す', async () => {
-    const result = await updateSignCount(mockDb, 'cred1', -1, 'user1');
+    const result = await updateSignCount(mockDb, 'cred1', -1);
     expect(result).toEqual({ error: 'invalid_sign_count', status: 400 });
   });
 
   it('データが存在しない（初回）場合は成功する', async () => {
     vi.mocked(repository.getSignCount).mockResolvedValue(null);
 
-    const result = await updateSignCount(mockDb, 'cred1', 1, 'user1');
+    const result = await updateSignCount(mockDb, 'cred1', 1);
 
     expect(result).toEqual({ ok: true, sign_count: 1 });
     expect(repository.upsertSignCount).toHaveBeenCalled();
