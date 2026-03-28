@@ -1,83 +1,94 @@
-# API SMBCC Nikko (Cloudflare Workers + Hono + D1)
+# API SMBC Nikko
 
-Cloudflare Workers, Hono, および Cloudflare D1 を使用した API プロジェクトです。
+Cloudflare Workers + Hono + D1 で構成された小規模 API プロジェクトです。
 
-## フォルダ構成と設計思想
+現在の API は次の 2 系統です。
 
-本プロジェクトでは、将来的な拡張性とメンテナンス性を考慮し、責務ごとにディレクトリを分けたアーキテクチャを採用しています。
+- `sign-count`: WebAuthn の `sign_count` 管理
+- `yuutai`: 株主優待データ参照
+
+## Structure
 
 ```text
-src/
-├── index.ts           # エントリーポイント。Honoの初期化とルートの集約
-├── routes/            # APIエンドポイント定義（コントローラー層）
-│   └── sign-count.ts  # 各リソースごとのルーティング
-├── services/          # ビジネスロジック層
-│   └── signCount.ts   # バリデーションや複雑なロジックを記述
-├── repository/        # データアクセス層
-│   └── signCount.ts   # D1(SQL)への直接アクセスをカプセル化
-├── middleware/        # ミドルウェア
-│   └── auth.ts        # 認証などの共通処理
-└── types/             # 型定義
-    └── env.ts         # Bindings (c.env) の型定義
+.
+├── src/
+│   ├── index.ts
+│   ├── middleware/
+│   ├── repository/
+│   ├── routes/
+│   ├── services/
+│   └── types/
+├── schemas/
+│   ├── webauthn-sign-count.sql
+│   └── yuutai.sql
+├── docs/
+│   └── api/
+├── tools/
+├── data/
+└── plan/
 ```
 
-### 各レイヤーの役割
+## App Layout
 
-1.  **Routes (コントローラー層)**:
-    *   HTTPリクエストを受け取り、適切なサービスを呼び出し、HTTPレスポンスを返します。
-    *   `app.route()` を使用することで、機能ごとにパスを分離して管理します。
+| ディレクトリ | 役割 |
+|---|---|
+| `src/routes/` | HTTP エンドポイント定義。リクエストを受け取りサービスを呼び出してレスポンスを返す |
+| `src/services/` | ビジネスロジック層。値の検証や判断ロジックを記述し、Repository を通じてデータを操作する |
+| `src/repository/` | D1 へのアクセスを集約。SQL はここだけに書き、他の層は SQL を意識しない |
+| `src/middleware/` | Bearer 認証など複数エンドポイントで共通して実行する処理 |
+| `src/types/` | Workers の Bindings（環境変数・D1）の型定義 |
+| `schemas/` | 現行の D1 スキーマ SQL |
+| `docs/api/` | API 仕様メモ |
+| `tools/` | データ投入やセットアップ補助スクリプト |
+| `plan/` | 作業計画 |
 
-2.  **Services (ビジネスロジック層)**:
-    *   アプリケーションの「核」となるロジックを記述します。
-    *   例えば、「新しい値が既存の値より大きいか確認する」といった判断はここで行います。
-    *   Repository を呼び出してデータの保存・取得を行います。
+新しい API を追加するときは `routes/` → `services/` → `repository/` の順にファイルを追加し、`src/index.ts` で `app.route()` に登録してください。
 
-3.  **Repository (データアクセス層)**:
-    *   データベース（Cloudflare D1）へのアクセスのみを担当します。
-    *   SQL文はこの層に集約され、他の層はSQLを意識せずにデータを操作できます。
+## Endpoints
 
-4.  **Middleware**:
-    *   認証（Bearer Auth）やロギングなど、複数のエンドポイントで共通して実行したい処理を記述します。
+- `GET /sign-count/:credentialId`
+- `PUT /sign-count/:credentialId`
+- `DELETE /sign-count/:credentialId`
+- `GET /yuutai/:tickerCode`
+- `GET /yuutai/:tickerCode/:shares`
+- `GET /yuutai/month/:recordDate`
 
-5.  **Types**:
-    *   TypeScript の型定義を管理します。特に Workers の `Bindings`（環境変数やD1のバインディング）を一箇所で定義することで、プロジェクト全体で型安全を保ちます。
+Bearer 認証を全エンドポイントで利用します。
 
-## 開発ガイドライン
+## Development
 
-### 新しいAPIを追加する場合
-1.  `src/routes/` に新しいファイル（例：`users.ts`）を作成する。
-2.  必要に応じて `src/services/` と `src/repository/` にロジックとDB操作を追加する。
-3.  `src/index.ts` で `app.route('/users', users)` のように登録する。
-
-### データベースの変更
-1.  新しいテーブルを追加する場合は、`schema.sql` に定義を追記するか、D1のマイグレーション機能（`migrations/` フォルダ）を利用してください。
-
-## テスト
-
-本プロジェクトでは **Vitest** を使用してテストを実装しています。
-レイヤーを分離しているため、データベース（D1）をモック化してビジネスロジックのみを高速にテストすることが可能です。
-
-### テストの実行方法
-```bash
-npm run test
-```
-
-### テスト方針
-- **Service 層のユニットテスト**: `src/services/*.test.ts`
-  - データの整合性チェックやバリデーションロジックを検証します。
-  - Repository をモック化することで、DBの状態に依存せず実行できます。
-- **統合テスト (将来予定)**: `src/index.test.ts`
-  - Hono の `app.request()` を使用し、認証からレスポンス返却までの一連の流れを検証します。
-
-## セットアップとデプロイ
-
-### ローカル開発
 ```bash
 npm install
 npm run dev
 ```
 
-### デプロイ
+## Test
+
 ```bash
-npm run deploy
+npm run test
+```
+
+`src/services/*.test.ts` でサービス層のユニットテストを管理しています。Repository をモック化することで DB の状態に依存せず高速にロジックを検証できます。
+
+## Schema Operations
+
+新しいテーブルや変更は `schemas/` に追加してください。
+
+```bash
+npx wrangler d1 execute smbcnikko-db --remote --file=./schemas/webauthn-sign-count.sql
+npx wrangler d1 execute smbcnikko-db --remote --file=./schemas/yuutai.sql
+```
+
+## Related Docs
+
+- `docs/api/sign-count.md`
+- `docs/api/yuutai.md`
+- `tools/setup/cloudflare/setup_d1_worker.md`
+
+## WebAuthn Table Script
+
+```bash
+bash ./tools/webauthn_sign_count.sh create
+bash ./tools/webauthn_sign_count.sh drop
+bash ./tools/webauthn_sign_count.sh import
 ```

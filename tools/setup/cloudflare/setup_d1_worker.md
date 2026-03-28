@@ -30,7 +30,9 @@ my-worker/
 │   └── devcontainer.json
 ├── src/
 │   └── index.ts
-├── schema.sql
+├── schemas/
+│   ├── webauthn-sign-count.sql
+│   └── yuutai.sql
 ├── wrangler.jsonc
 ├── package.json
 ├── tsconfig.json
@@ -80,7 +82,7 @@ To access your new D1 Database in your Worker, add the following snippet to your
 ※自動で記録された
 
 ### データベース作成
-npx wrangler d1 execute smbcnikko-db --remote --file=./schema.sql
+npx wrangler d1 execute smbcnikko-db --remote --file=./schemas/webauthn-sign-count.sql
 
 ```bash
  ⛅️ wrangler 4.76.0
