@@ -1,4 +1,4 @@
 export type Env = {
-  DB: D1Database;
-  API_SECRET: string;
+	DB: D1Database;
+	API_SECRET: string;
 };

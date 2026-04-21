@@ -1,13 +1,13 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(gh issue:*)",
-      "Bash(gh label:*)",
-      "Bash(gh pr:*)",
-      "Bash(tail *)",
-      "Bash(chmod +x *)",
-      "Bash(npm run:*)",
-      "Bash(npx vitest:*)"
-    ]
-  }
+	"permissions": {
+		"allow": [
+			"Bash(gh issue:*)",
+			"Bash(gh label:*)",
+			"Bash(gh pr:*)",
+			"Bash(tail *)",
+			"Bash(chmod +x *)",
+			"Bash(npm run:*)",
+			"Bash(npx vitest:*)"
+		]
+	}
 }

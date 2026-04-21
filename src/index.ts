@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { Env } from './types/env';
 import { authMiddleware } from './middleware/auth';
 import signCount from './routes/sign-count';
 import yuutai from './routes/yuutai';
+import type { Env } from './types/env';
 
 const app = new Hono<{ Bindings: Env }>();
 
