@@ -3,8 +3,6 @@
 .env*.local
 .wrangler/
 node_modules/
-wrangler.jsonc
-package.json
-package-lock.json
 data/
 .work/
+.dev.vars
