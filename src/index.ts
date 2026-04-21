@@ -1,16 +1,19 @@
 import { Hono } from 'hono';
 import { authMiddleware } from './middleware/auth';
+import { WebauthnSignCount } from './features/webauthn-sign-count';
+import webauthnSignCount from './features/webauthn-sign-count/route';
 import signCount from './routes/sign-count';
 import yuutai from './routes/yuutai';
 import type { Env } from './types/env';
 
+export { WebauthnSignCount };
+
 const app = new Hono<{ Bindings: Env }>();
 
-// 全エンドポイントに Bearer Token 認証を適用
 app.use('/*', authMiddleware);
 
-// 各ルートの登録
 app.route('/sign-count', signCount);
 app.route('/yuutai', yuutai);
+app.route('/webauthn-sign-count', webauthnSignCount);
 
 export default app;

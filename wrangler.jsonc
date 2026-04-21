@@ -1,0 +1,28 @@
+{
+	"name": "api-smbcnikko",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"account_id": "96ec8417a1c866baa9cfdeca9e5d25f1",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "smbcnikko-db",
+			"database_id": "51d19720-02b1-42d7-afcf-7126f7f7288f",
+			"remote": true
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "WEBAUTHN_SIGN_COUNT",
+				"class_name": "WebauthnSignCount"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["WebauthnSignCount"]
+		}
+	]
+}
