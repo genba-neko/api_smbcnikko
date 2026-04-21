@@ -1,0 +1,8 @@
+# プロジェクト固有の devDependencies をここに追記する
+# 1行1パッケージ。# で始まる行・空行はスキップされる。
+# workbench 共通ツール (biome / typescript / vitest) は workbench/node/packages.txt で管理。
+#
+# 例:
+# @types/node
+# @playwright/test
+wrangler

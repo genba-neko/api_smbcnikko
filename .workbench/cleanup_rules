@@ -1,0 +1,18 @@
+# TYPE  PATTERN  [EXCLUDE]
+# RDIR  : 同名ディレクトリを再帰的に削除 (EXCLUDE は除外パスの部分一致、カンマ区切りで複数指定可)
+# FILE  : 特定パスのファイルを削除 (プロジェクトルートからの相対パス)
+# GLOB  : ワイルドカード指定でファイルを削除
+#
+# PATTERN / EXCLUDE には %ENV_VAR% 形式で環境変数を参照できる (.env から読み込まれる)
+# 例: FILE  %LOG_FILE%
+# 例: RDIR  dist   node_modules
+#
+# ※ node_modules を削除したい場合は RDIR node_modules を追加する
+
+RDIR  dist
+RDIR  .next
+RDIR  .nuxt
+RDIR  .wrangler
+
+GLOB  logs\*
+GLOB  data\output\*
