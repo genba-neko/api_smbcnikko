@@ -57,15 +57,46 @@ Bearer 認証を全エンドポイントで利用します。
 
 ## Development
 
+### セットアップ (初回 / 環境再構築)
+
+```powershell
+# Windows
+workbench\npm\setup-node.bat
+```
+
 ```bash
-npm install
-npm run dev
+# Git Bash / WSL
+bash workbench/npm/setup-node.sh
+```
+
+### 開発サーバー
+
+VSCode で **PowerShell (workbench)** ターミナルを開くとショートカットが使えます。
+
+```
+dev          # wrangler dev (ローカル D1)
+dev-remote   # wrangler dev --remote (リモート D1)
+deploy       # wrangler deploy
+type-check   # tsc --noEmit
+lint         # biome check
+format       # biome check --write (自動修正)
+d1-init      # ローカル D1 スキーマ初期化
+```
+
+### ローカル D1 初期化
+
+```bash
+d1-init
+# または
+TARGET=local bash tools/d1_schema.sh recreate --all
 ```
 
 ## Test
 
 ```bash
-npm run test
+test-unit
+# または
+npm exec --no -- vitest run
 ```
 
 `src/services/*.test.ts` でサービス層のユニットテストを管理しています。Repository をモック化することで DB の状態に依存せず高速にロジックを検証できます。
