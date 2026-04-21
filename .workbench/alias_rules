@@ -12,6 +12,5 @@ test-unit     npm exec --no -- vitest run @args                                #
 type-check    npm exec --no -- tsc --noEmit @args                              # 型チェック
 d1-init       TARGET=local bash tools/d1_schema.sh recreate --all              # ローカル D1 スキーマ初期化 (要 Git Bash/WSL)
 
-# 以下はプロジェクトの package.json に対応スクリプトを定義してから有効化する
-# lint          npm run lint @args   # lint チェック
-# format        npm run format @args # フォーマット
+lint          npm exec --no -- biome check . @args                             # lint チェック
+format        npm exec --no -- biome check --write . @args                    # フォーマット + lint 自動修正
