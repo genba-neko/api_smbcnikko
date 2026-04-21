@@ -52,14 +52,21 @@ export class WebauthnSignCount extends DurableObject<Env> {
 				);
 			}
 
+			// MAX upsert（+1 なし）
 			this.db.exec(
 				`INSERT INTO webauthn_sign_count (credential_id, sign_count, created_at, updated_at)
          VALUES (?, ?, unixepoch(), unixepoch())
          ON CONFLICT(credential_id) DO UPDATE SET
-           sign_count = MAX(sign_count, excluded.sign_count) + 1,
+           sign_count = MAX(sign_count, excluded.sign_count),
            updated_at = unixepoch()`,
 				credentialId,
-				local_sign_count + 1,
+				local_sign_count,
+			);
+			// +1 は常に1回だけ
+			this.db.exec(
+				`UPDATE webauthn_sign_count SET sign_count = sign_count + 1, updated_at = unixepoch()
+         WHERE credential_id = ?`,
+				credentialId,
 			);
 
 			const row = this.db
