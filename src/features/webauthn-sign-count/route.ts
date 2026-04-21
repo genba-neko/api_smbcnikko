@@ -16,11 +16,11 @@ webauthnSignCount.get('/:credentialId', async (c) => {
 	return c.json(data, res.status as ContentfulStatusCode);
 });
 
-webauthnSignCount.put('/:credentialId', async (c) => {
+webauthnSignCount.post('/:credentialId', async (c) => {
 	const body = await c.req.json();
 	const stub = getStub(c.env, c.req.param('credentialId'));
 	const res = await stub.fetch(`https://do/${c.req.param('credentialId')}`, {
-		method: 'PUT',
+		method: 'POST',
 		body: JSON.stringify(body),
 		headers: { 'Content-Type': 'application/json' },
 	});

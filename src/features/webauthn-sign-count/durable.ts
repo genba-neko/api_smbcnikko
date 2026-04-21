@@ -40,25 +40,15 @@ export class WebauthnSignCount extends DurableObject<Env> {
 			return Response.json(row);
 		}
 
-		if (request.method === 'PUT') {
-			const { sign_count } = await request.json<{ sign_count: number }>();
+		if (request.method === 'POST') {
+			const { local_sign_count } = await request.json<{
+				local_sign_count: number;
+			}>();
 
-			if (typeof sign_count !== 'number' || sign_count < 0) {
-				return Response.json({ error: 'invalid_sign_count' }, { status: 400 });
-			}
-
-			const existing =
-				this.db
-					.exec<SignCountRow>(
-						'SELECT * FROM webauthn_sign_count WHERE credential_id = ?',
-						credentialId,
-					)
-					.toArray()[0] ?? null;
-
-			if (existing && existing.sign_count >= sign_count) {
+			if (typeof local_sign_count !== 'number' || local_sign_count < 0) {
 				return Response.json(
-					{ error: 'sign_count_not_greater', current: existing.sign_count },
-					{ status: 409 },
+					{ error: 'invalid_local_sign_count' },
+					{ status: 400 },
 				);
 			}
 
@@ -66,13 +56,20 @@ export class WebauthnSignCount extends DurableObject<Env> {
 				`INSERT INTO webauthn_sign_count (credential_id, sign_count, created_at, updated_at)
          VALUES (?, ?, unixepoch(), unixepoch())
          ON CONFLICT(credential_id) DO UPDATE SET
-           sign_count = excluded.sign_count,
+           sign_count = MAX(sign_count, excluded.sign_count) + 1,
            updated_at = unixepoch()`,
 				credentialId,
-				sign_count,
+				local_sign_count + 1,
 			);
 
-			return Response.json({ ok: true, sign_count });
+			const row = this.db
+				.exec<SignCountRow>(
+					'SELECT * FROM webauthn_sign_count WHERE credential_id = ?',
+					credentialId,
+				)
+				.toArray()[0];
+
+			return Response.json({ ok: true, sign_count: row.sign_count });
 		}
 
 		if (request.method === 'DELETE') {
