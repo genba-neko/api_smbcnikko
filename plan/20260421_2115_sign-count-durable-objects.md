@@ -29,30 +29,45 @@ src/
 
 別 Worker デプロイ時は `wrangler.webauthn-sign-count.jsonc` で `main` を feature の `index.ts` に向ける。
 
-## アーキテクチャ
+## 設計：アトミック MAX+1 更新
+
+DO のシリアライズ保証を活かし、クライアント1ステップで次の sign_count を取得する設計。
 
 ```
-PUT /webauthn-sign-count/:credentialId
-  ↓
-Worker (Hono)
-  ↓
-WebauthnSignCount DO (credentialId でインスタンス分離)
-  ↓ DO 内 SQLite
-  sign_count 更新 (シリアライズ保証)
-  ↓
-response
+POST {local_sign_count: N}
+  → DO 内で MAX(current, N) + 1 をアトミックに保存
+  → 新しい sign_count を返す
 ```
 
-### write-through cache フロー（scrapy worker）
+### クライアントの同期フロー
 
 ```
-起動 → GET /webauthn-sign-count/:credentialId → ローカル上書き
-カウントアップ → PUT /webauthn-sign-count/:credentialId → DO に書く
+# オンライン時（1ステップ）
+before auth:  next = POST {local_sign_count: local} → local = next.sign_count
+
+# オフライン時
+before auth:  local += 1
+
+# オフライン復帰後
+POST {local_sign_count: local}  ← DO が MAX で吸収、巻き戻りなし
+```
+
+### なぜこの設計か
+
+- **2ステップ不要**: GET → local += 1 → POST after success の3操作が POST 1つに集約
+- **競合ゼロ**: DO 単一インスタンスのシリアライズ → DynamoDB conditional update 不要
+- **オフライン耐性**: ローカルで進んだ値を復帰後に POST するだけで DO が吸収
+- **巻き戻りなし**: MAX semantics で小さい値は無視、飛び値は WebAuthn 仕様上 OK
+
+## API
+
+```
+GET  /webauthn-sign-count/:credentialId          → 現在値取得（404 if 未登録）
+POST /webauthn-sign-count/:credentialId          → MAX(current, local_sign_count) + 1 を保存・返却
+DELETE /webauthn-sign-count/:credentialId        → 削除
 ```
 
 ## DO データスキーマ
-
-D1 の `webauthn_sign_count` テーブルと同構造：
 
 ```sql
 CREATE TABLE IF NOT EXISTS webauthn_sign_count (
@@ -63,42 +78,12 @@ CREATE TABLE IF NOT EXISTS webauthn_sign_count (
 );
 ```
 
-## 実装ステップ
-
-### 1. `src/features/webauthn-sign-count/durable.ts`
-
-- `WebauthnSignCount` クラス（`DurableObject` 継承）
-- DO 内 SQLite でテーブル初期化
-- GET / PUT / DELETE を `fetch()` でハンドル
-- sign_count 増加チェック（現在値以下なら 409）
-
-### 2. `src/features/webauthn-sign-count/route.ts`
-
-- Hono ルート: GET / PUT / DELETE `/webauthn-sign-count/:credentialId`
-- `idFromName(credentialId)` で DO インスタンス取得
-
-### 3. `src/features/webauthn-sign-count/index.ts`
-
-- `WebauthnSignCount` re-export
-- standalone Worker 用 Hono app export
-
-### 4. `wrangler.jsonc` 更新
-
-```jsonc
-"durable_objects": {
-  "bindings": [{ "name": "WEBAUTHN_SIGN_COUNT", "class_name": "WebauthnSignCount" }]
-},
-"migrations": [{ "tag": "v1", "new_classes": ["WebauthnSignCount"] }]
+POST の UPDATE:
+```sql
+ON CONFLICT(credential_id) DO UPDATE SET
+  sign_count = MAX(sign_count, excluded.sign_count) + 1,
+  updated_at = unixepoch()
 ```
-
-### 5. `src/types/env.ts` 更新
-
-`WEBAUTHN_SIGN_COUNT: DurableObjectNamespace` 追加
-
-### 6. `src/index.ts` 更新
-
-- `export { WebauthnSignCount }` 追加
-- `/webauthn-sign-count` ルート登録
 
 ## ファイル変更一覧
 
@@ -107,6 +92,8 @@ CREATE TABLE IF NOT EXISTS webauthn_sign_count (
 | `src/features/webauthn-sign-count/durable.ts` | 新規 |
 | `src/features/webauthn-sign-count/route.ts` | 新規 |
 | `src/features/webauthn-sign-count/index.ts` | 新規 |
+| `src/features/webauthn-sign-count/README.md` | 新規 |
 | `src/types/env.ts` | 更新 |
 | `wrangler.jsonc` | 更新 |
 | `src/index.ts` | 更新 |
+| `.gitignore` | 更新（wrangler.jsonc 等を追跡、.dev.vars 除外） |
